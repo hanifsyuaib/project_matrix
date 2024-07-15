@@ -1,17 +1,18 @@
-from django.shortcuts import render
 from django.http import HttpResponse
-
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
-import openai
-
 from django.contrib import auth
 from django.contrib.auth.models import User
-from .models import Chat
-
 from django.utils import timezone
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
+from django.contrib.auth import logout as auth_logout
 
+import json
+
+from .models import Chat
+
+import openai
 import os
 from openai import OpenAI
 from dotenv import load_dotenv
@@ -52,8 +53,6 @@ def ask_openai(message):
 
 @login_required(login_url='/login')
 def chatbot(request):
-    chats = Chat.objects.filter(user=request.user)
-
     if request.method == 'POST':
         message = request.POST.get('message')
         response = ask_openai(message)
@@ -61,47 +60,54 @@ def chatbot(request):
         chat = Chat(user=request.user, message=message, response=response, created_at=timezone.now())
         chat.save()
         return JsonResponse({'message': message, 'response': response})
-    return render(request, 'chatbot.html', {'chats': chats})
+    
+    # For GET requests, return existing chats
+    chats = Chat.objects.filter(user=request.user)
+    chat_data = [{'message': chat.message, 'response': chat.response} for chat in chats]
+    return JsonResponse({'chats': chat_data})
 
-
+@ensure_csrf_cookie
+@csrf_exempt
 def login(request):
     if request.method == 'POST':
-        username = request.POST['username']
-        password = request.POST['password']
+        username = request.POST.get('username')
+        password = request.POST.get('password')
         user = auth.authenticate(request, username=username, password=password)
+        
         if user is not None:
             auth.login(request, user)
-            return redirect('chatbot')
+            return JsonResponse({'success': True, 'redirect_url': '/chatbot/'})
         else:
-            error_message = 'Invalid username or password'
-            return render(request, 'login.html', {'error_message': error_message})
-    else:
-        return render(request, 'login.html')
+            return JsonResponse({'success': False, 'error_message': 'Invalid username or password'}, status=400)
 
+    return JsonResponse({'success': False, 'error_message': 'Invalid request method'}, status=400)
+
+
+@csrf_exempt # Later on, handle csrf token correctly
 def register(request):
     if request.method == 'POST':
-        username = request.POST['username']
-        email = request.POST['email']
-        password1 = request.POST['password1']
-        password2 = request.POST['password2']
+        data = json.loads(request.body)
+        username = data.get('username')
+        email = data.get('email')
+        password1 = data.get('password1')
+        password2 = data.get('password2')
 
         if password1 == password2:
             try:
                 user = User.objects.create_user(username, email, password1)
                 user.save()
                 auth.login(request, user)
-                return redirect('chatbot')
+                return JsonResponse({'success': True, 'redirect_url': 'chatbot'}, status=201)
             except:
-                error_message = 'Error creating account'
-                return render(request, 'register.html', {'error_message': error_message})
+                return JsonResponse({'success': False, 'error_message': 'Error creating account'}, status=400)
         else:
-            error_message = 'Password dont match'
-            return render(request, 'register.html', {'error_message': error_message})
-    return render(request, 'register.html')
+            return JsonResponse({'success': False, 'error_message': 'Passwords do not match'}, status=400)
+    return JsonResponse({'success': False, 'error_message': 'Invalid request method'}, status=405)
 
 def logout(request):
-    auth.logout(request)
+    auth_logout(request)
     return redirect('login')
+
 
 def onboarding(request):
     context = {
