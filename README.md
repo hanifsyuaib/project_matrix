@@ -18,7 +18,7 @@ pip install -r requirements.txt
 python manage.py makemigrations
 python manage.py migrate
 ```
-### 5. Create a file ".env" in root directory and put "OPENAI_API_KEY = <your_api_key>" inside
+### 5. Create a file ".env" in root directory and put "OPENAI_API_KEY = '<your_api_key>' " inside
 
 ### 6. Run server with port, for example:
 ```
