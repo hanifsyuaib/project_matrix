@@ -5,7 +5,7 @@ import json
 class ChatMatrixTest(TestCase):
     def setUp(self):
         self.client = Client()
-        self.url = reverse('home') # whats this supposed to be ?
+        self.url = reverse('home')
 
     def test_home_get(self):
         response = self.client.get(self.url)
