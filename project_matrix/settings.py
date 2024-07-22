@@ -52,6 +52,7 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
 ]
 
+
 # [IMPORTANT]: CORS SETTINGS
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_HEADERS = [
@@ -78,6 +79,7 @@ SESSION_COOKIE_SAMESITE = 'None'
 SESSION_COOKIE_SECURE = True # IMPORTANT: Set to True for using HTTPS in production
 SESSION_COOKIE_HTTPONLY = True  # Prevent client-side access to cookies
 SESSION_COOKIE_AGE = 1209600  # Set session age (e.g., 2 weeks in seconds)
+
 
 # [IMPORTANT]: CSRF COOKIE SETTINGS
 CSRF_COOKIE_NAME = 'csrftoken'

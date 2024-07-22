@@ -43,7 +43,6 @@ def ask_openai(message):
         ],
         max_tokens = 300
     )
-    
 
     # Retrieve token usage
     token_usage = response.usage
@@ -52,39 +51,45 @@ def ask_openai(message):
     answer = response.choices[0].message.content.strip()
     return answer
 
-@login_required(login_url='http://localhost:8080/login') # Soon to be changed
 def chatbot(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({'error_message': 'Unauthorized'}, status=401)
+
     if request.method == 'POST':
-        message = request.POST.get('message')
+        data = json.loads(request.body)
+        message = data.get('message')
         response = ask_openai(message)
 
         chat = Chat(user=request.user, message=message, response=response, created_at=timezone.now())
         chat.save()
-        return JsonResponse({'message': message, 'response': response, 'username': request.user.username})
+        return JsonResponse({'message': message, 'response': response})
     
     # For GET requests, return existing chats
     chats = Chat.objects.filter(user=request.user)
-    chat_data = [{'message': chat.message, 'response': chat.response, 'username': request.user.username} for chat in chats]
-    return JsonResponse({'chats': chat_data})
+    chat_data = [{'message': chat.message, 'response': chat.response} for chat in chats]
+    return JsonResponse({'chats': chat_data, 'username': request.user.username})
 
 def logout(request):
-    auth.logout(request)
-    return JsonResponse({'success': True})
+    if request.method == 'POST':
+        auth.logout(request)
+        return JsonResponse({'success': True}, status=200)
+        
+    return JsonResponse({'success': False, 'error_message': 'Invalid request method'}, status=405)
 
 def login(request):
     if request.method == 'POST':
-        username = request.POST.get('username')
-        password = request.POST.get('password')
+        data = json.loads(request.body)
+        username = data.get('username')
+        password = data.get('password')
         user = auth.authenticate(request, username=username, password=password)
         
         if user is not None:
             auth.login(request, user)
-            csrf_token = get_token(request)
-            return JsonResponse({'success': True, 'csrfToken': csrf_token, 'redirect_url': '/chatbot/'})
+            return JsonResponse({'success': True}, status=200)
         else:
             return JsonResponse({'success': False, 'error_message': 'Invalid username or password'}, status=400)
 
-    return JsonResponse({'success': False, 'error_message': 'Invalid request method'}, status=400)
+    return JsonResponse({'success': False, 'error_message': 'Invalid request method'}, status=405)
 
 def register(request):
     if request.method == 'POST':
