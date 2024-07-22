@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-7@4^gv_nc%*#g(o8(=&cbfa9l8qcv_a(tva-vf&ylo0&tw&_02
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'chat_matrix',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
@@ -48,7 +49,51 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
+
+# [IMPORTANT]: CORS SETTINGS
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_HEADERS = [
+    'Content-Type',  # You might need to allow other headers used in your requests
+    'X-CSRFToken', 
+]
+CORS_ALLOWED_ORIGINS = [ # Add your frontend origin
+    'http://localhost:8080',
+    'http://192.168.0.139:8080',
+    'http://192.168.17.87:8080',
+    'http://192.168.0.179:8080',
+    'http://192.168.0.207:8080',
+]
+CORS_ORIGIN_WHITELIST = [ # Adjust with your actual frontend URL
+    'http://localhost:8080',  
+    'http://192.168.17.87:8080',
+    'http://192.168.0.179:8080',
+    'http://192.168.0.207:8080',
+]
+
+
+# [IMPORTANT]: SESSION COOKIE SETTINGS
+SESSION_COOKIE_SAMESITE = 'None'
+SESSION_COOKIE_SECURE = True # IMPORTANT: Set to True for using HTTPS in production
+SESSION_COOKIE_HTTPONLY = True  # Prevent client-side access to cookies
+SESSION_COOKIE_AGE = 1209600  # Set session age (e.g., 2 weeks in seconds)
+
+# [IMPORTANT]: CSRF COOKIE SETTINGS
+CSRF_COOKIE_NAME = 'csrftoken'
+CSRF_COOKIE_SAMESITE = 'None' 
+CSRF_COOKIE_HTTPONLY = False  # Make sure this is set to False to allow reading the token in JavaScript
+CSRF_COOKIE_SECURE = True # IMPORTANT: Set to True for using HTTPS in production
+CSRF_USE_SESSIONS = True  # CSRF tokens are tied to the user’s session, and they are invalidated when the session expires or is cleared
+CSRF_TRUSTED_ORIGINS = [ # Add your frontend origin
+    'http://localhost:8080',
+    'http://192.168.0.139:8080',
+    'http://127.0.0.1:8080',
+    'http://192.168.17.87:8080',
+    'http://192.168.0.179:8080',
+    'http://192.168.0.207:8080',
+]
+
 
 ROOT_URLCONF = 'project_matrix.urls'
 
