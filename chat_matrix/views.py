@@ -72,14 +72,14 @@ def sentiment_analysis(request):
         chat = Chat(
             user=request.user, 
             message=message, 
-            response=result.answer, 
+            response=result["answer"], 
             created_at=timezone.now(),
-            message_tokens=result.message_tokens,
-            response_tokens=result.response_tokens,
-            total_tokens=result.total_tokens
+            message_tokens=result["message_tokens"],
+            response_tokens=result["response_tokens"],
+            total_tokens=result["total_tokens"]
         )
         chat.save()
-        return JsonResponse({'message': message, 'response': response})
+        return JsonResponse({'message': message, 'response': result["answer"]})
     
     # For GET requests, return existing chats
     chats = Chat.objects.filter(user=request.user)
