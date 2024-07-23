@@ -23,17 +23,18 @@ client = OpenAI(
     api_key=os.environ.get("OPENAI_API_KEY"),
     )
 
-def ask_openai(message):
+def openai_sentiment_analysis(message):
     response = client.chat.completions.create(
         model = "gpt-3.5-turbo",
         messages =[
             {
                 "role": "system", 
-                "content": '''
+                "content":  '''
                                 You are an helpful assistant called ChatMatrix. 
                                 Have nothing related to openai and chatgpt.
                                 User will give a review and your job is to do sentiment analysis,
-                                which grouped them into "Positive", "Negative", or "Neutral".   
+                                which grouped them into "Positive", "Negative", or "Neutral".
+                                Make sure to only response either "Positive", "Negative", or "Neutral".   
 
                             '''
             },
@@ -44,23 +45,39 @@ def ask_openai(message):
         max_tokens = 300
     )
 
-    # Retrieve token usage
+    # Retrieve answer and token usage
     token_usage = response.usage
-    print(f"\nMessage: {message}\nToken Used: {token_usage}\n")
 
+    message_tokens = token_usage.prompt_tokens
+    response_tokens = token_usage.completion_tokens
+    total_tokens = token_usage.total_tokens
     answer = response.choices[0].message.content.strip()
-    return answer
 
-def chatbot(request):
+    return {
+            "answer": answer, 
+            "message_tokens": message_tokens, 
+            "response_tokens": response_tokens, 
+            "total_tokens": total_tokens
+    }
+
+def sentiment_analysis(request):
     if not request.user.is_authenticated:
         return JsonResponse({'error_message': 'Unauthorized'}, status=401)
 
     if request.method == 'POST':
         data = json.loads(request.body)
         message = data.get('message')
-        response = ask_openai(message)
+        result = openai_sentiment_analysis(message)
 
-        chat = Chat(user=request.user, message=message, response=response, created_at=timezone.now())
+        chat = Chat(
+            user=request.user, 
+            message=message, 
+            response=result.answer, 
+            created_at=timezone.now(),
+            message_tokens=result.message_tokens,
+            response_tokens=result.response_tokens,
+            total_tokens=result.total_tokens
+        )
         chat.save()
         return JsonResponse({'message': message, 'response': response})
     
@@ -73,7 +90,7 @@ def logout(request):
     if request.method == 'POST':
         auth.logout(request)
         return JsonResponse({'success': True}, status=200)
-        
+
     return JsonResponse({'success': False, 'error_message': 'Invalid request method'}, status=405)
 
 def login(request):
