@@ -38,7 +38,7 @@ SECRET_KEY = '<your_secret_key>'
 # HTTPS frontend URL in Production
 HTTPS_FRONTEND = '<your_https_frontend>'
 
-# Frontend domain in Production (WITHOUT HTTPS)
+# Domain in Production (WITHOUT HTTPS)
 FRONTEND_DOMAIN = '<your_frontend_domain>'
 BACKEND_DOMAIN = '<your_backend_domain>'
 ```	
