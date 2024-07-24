@@ -52,7 +52,7 @@ or
 python manage.py runserver 8000
 ```
 
-### Create Admin user for accessing the Django admin interface in this route '/admin/'
+### 7. Create Admin user for accessing the Django admin interface in this route '/admin/'
 ```
 python manage.py createsuperuser
 ```
