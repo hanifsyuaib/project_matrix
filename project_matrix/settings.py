@@ -24,12 +24,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-7@4^gv_nc%*#g(o8(=&cbfa9l8qcv_a(tva-vf&ylo0&tw&_02'
+SECRET_KEY = os.environ.get("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = ['*']
+# SECURITY WARNING: Only put your backend and frontend domain in production
+ALLOWED_HOSTS = [os.environ.get("FRONTEND_DOMAIN"), os.environ.get("BACKEND_DOMAIN")] 
 
 
 # Application definition
@@ -64,17 +65,10 @@ CORS_ALLOW_HEADERS = [
     'X-CSRFToken', 
 ]
 CORS_ALLOWED_ORIGINS = [ # Add your frontend origin
-    'http://localhost:8080',
-    'http://192.168.0.139:8080',
-    'http://192.168.17.87:8080',
-    'http://192.168.0.179:8080',
-    'http://192.168.0.207:8080',
+    os.environ.get("HTTPS_FRONTEND"),
 ]
 CORS_ORIGIN_WHITELIST = [ # Adjust with your actual frontend URL
-    'http://localhost:8080',  
-    'http://192.168.17.87:8080',
-    'http://192.168.0.179:8080',
-    'http://192.168.0.207:8080',
+    os.environ.get("HTTPS_FRONTEND"),  
 ]
 
 
@@ -92,13 +86,17 @@ CSRF_COOKIE_HTTPONLY = False  # Make sure this is set to False to allow reading 
 CSRF_COOKIE_SECURE = True # IMPORTANT: Set to True for using HTTPS in production
 CSRF_USE_SESSIONS = True  # CSRF tokens are tied to the user’s session, and they are invalidated when the session expires or is cleared
 CSRF_TRUSTED_ORIGINS = [ # Add your frontend origin
-    'http://localhost:8080',
-    'http://192.168.0.139:8080',
-    'http://127.0.0.1:8080',
-    'http://192.168.17.87:8080',
-    'http://192.168.0.179:8080',
-    'http://192.168.0.207:8080',
+    os.environ.get("HTTPS_FRONTEND"),
 ]
+
+# [IMPORTANT]: PRODUCTION SETTINGS
+SECURE_SSL_REDIRECT = True
+SECURE_HSTS_SECONDS = 31536000  # 1 year
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_REFERRER_POLICY = "no-referrer-when-downgrade"
 
 
 ROOT_URLCONF = 'project_matrix.urls'
@@ -128,11 +126,11 @@ WSGI_APPLICATION = 'project_matrix.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'ChatMatrix',
-        'USER': 'hanif',
+        'NAME': os.environ.get("DB_NAME"),
+        'USER': os.environ.get("DB_USER"),
         'PASSWORD': os.environ.get("DB_PASSWORD"),
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'HOST': os.environ.get("DB_HOST"),
+        'PORT': os.environ.get("DB_PORT"),
     }
 }
 
