@@ -9,7 +9,7 @@ on:
       - master
 
 jobs:
-  sonarqube:
+  sonarcloud:
     name: SonarCloud Scan
     runs-on: ubuntu-latest
 
@@ -38,6 +38,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install coverage
+          pip install tox
 
       - name: Run tests and generate coverage
         env:
@@ -53,11 +54,8 @@ jobs:
           coverage run --source='.' manage.py test
           coverage xml -o coverage.xml
 
-      - name: Set up JDK 17
-        uses: actions/setup-java@v2
-        with:
-          distribution: 'temurin'
-          java-version: '17'
+      - name: Run tox
+        run: tox -e py
 
       - name: Install SonarCloud Scanner
         run: |
@@ -67,13 +65,11 @@ jobs:
           sudo ln -s /opt/sonar-scanner/bin/sonar-scanner /usr/local/bin/sonar-scanner
 
       - name: Run SonarCloud analysis
+        uses: SonarSource/sonarcloud-github-action@master
         env:
-          JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.12-7/x64
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: https://sonarcloud.io
         run: |
-          export JAVA_HOME=/opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.12-7/x64
-          export PATH=$JAVA_HOME/bin:$PATH
           sonar-scanner \
             -Dsonar.projectKey=hanifsyuaib_project_matrix \
             -Dsonar.organization=hanifsyuaib \
