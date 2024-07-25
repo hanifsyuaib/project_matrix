@@ -3,7 +3,7 @@ name: SonarCloud
 on:
   push:
     branches:
-      - master  
+      - master
   pull_request:
     branches:
       - master
@@ -27,7 +27,11 @@ jobs:
 
       - name: Install SonarCloud Scanner
         run: |
-          pip install sonar-scanner
+          # Install SonarScanner
+          wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.8.0.2856-linux.zip
+          unzip sonar-scanner-cli-4.8.0.2856-linux.zip
+          sudo mv sonar-scanner-4.8.0.2856-linux /opt/sonar-scanner
+          sudo ln -s /opt/sonar-scanner/bin/sonar-scanner /usr/local/bin/sonar-scanner
 
       - name: Run SonarCloud analysis
         env:
