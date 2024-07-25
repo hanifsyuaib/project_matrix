@@ -1,0 +1,41 @@
+name: SonarCloud
+
+on:
+  push:
+    branches:
+      - master  
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  sonarqube:
+    name: SonarCloud Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Install SonarCloud Scanner
+        run: |
+          pip install sonar-scanner
+
+      - name: Run SonarCloud analysis
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          sonar-scanner \
+            -Dsonar.projectKey=hanifsyuaib_project_matrix \
+            -Dsonar.organization=hanifsyuaib \
+            -Dsonar.sources=chat_matrix \
+            -Dsonar.python.coverage.reportPaths=coverage.xml \
+            -Dsonar.python.version=3.11

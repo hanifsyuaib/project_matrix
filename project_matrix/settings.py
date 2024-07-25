@@ -27,7 +27,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 # SECURITY WARNING: Only put your backend and frontend domain in production
 ALLOWED_HOSTS = [os.environ.get("FRONTEND_DOMAIN"), os.environ.get("BACKEND_DOMAIN")] 
@@ -90,6 +90,7 @@ CSRF_TRUSTED_ORIGINS = [ # Add your frontend origin
 ]
 
 # [IMPORTANT]: PRODUCTION SETTINGS
+'''
 SECURE_SSL_REDIRECT = True
 SECURE_HSTS_SECONDS = 31536000  # 1 year
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
@@ -97,7 +98,7 @@ SECURE_HSTS_PRELOAD = True
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_REFERRER_POLICY = "no-referrer-when-downgrade"
-
+'''
 
 ROOT_URLCONF = 'project_matrix.urls'
 
