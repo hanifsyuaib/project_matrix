@@ -15,12 +15,7 @@ env\Scripts\activate.bat
 ```
 pip install -r requirements.txt
 ``` 
-### 4. Make migrations and migrate for setup database
-```
-python manage.py makemigrations
-python manage.py migrate
-```
-### 5. Create a file ".env" in root directory and put fill this out inside:
+### 4. Create a file ".env" in root directory and put fill this out inside:
 ```
 # OPENAI API
 OPENAI_API_KEY = '<your_openai_api_key>'
@@ -35,13 +30,18 @@ DB_PORT = '<your_db_port>'
 # Secret key for django in settings.py
 SECRET_KEY = '<your_secret_key>'
 
-# HTTPS frontend URL in Production
+# HTTPS/HTTP frontend URL in Production
 HTTPS_FRONTEND = '<your_https_frontend>'
 
-# Domain in Production (WITHOUT HTTPS)
+# Domain in Production (WITHOUT HTTPS/HTTP)
 FRONTEND_DOMAIN = '<your_frontend_domain>'
 BACKEND_DOMAIN = '<your_backend_domain>'
 ```	
+### 5. Make migrations and migrate for setup database
+```
+python manage.py makemigrations
+python manage.py migrate
+```
 
 ### 6. Run server with port, for example:
 ```
@@ -52,7 +52,7 @@ or
 python manage.py runserver 8000
 ```
 
-### 7. Create Admin user for accessing the Django admin interface in this route '/admin/'
+### 7. Additional: Create Admin user for accessing the Django admin interface in this route '/admin/'
 ```
 python manage.py createsuperuser
 ```
