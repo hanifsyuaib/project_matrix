@@ -63,6 +63,7 @@ jobs:
       - name: Run SonarCloud analysis
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: https://sonarcloud.io
         run: |
           sonar-scanner \
             -Dsonar.projectKey=hanifsyuaib_project_matrix \
