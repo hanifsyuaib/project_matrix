@@ -48,6 +48,7 @@ jobs:
           DB_PORT: 5432
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           HTTPS_FRONTEND: http://localhost:8080
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
         run: |
           coverage run --source='.' manage.py test
           coverage xml -o coverage.xml
