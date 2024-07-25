@@ -12,6 +12,18 @@ jobs:
   sonarqube:
     name: SonarCloud Scan
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_DB: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: --health-cmd "pg_isready -U postgres" --health-interval 10s --health-timeout 5s --health-retries 5
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -27,11 +39,6 @@ jobs:
           pip install -r requirements.txt
           pip install coverage
 
-      - name: Set up PostgreSQL
-        uses: harmon758/postgresql-action@v1
-        with:
-          postgresql version: '13'
-
       - name: Run tests and generate coverage
         env:
           DB_NAME: postgres
@@ -39,14 +46,12 @@ jobs:
           DB_PASSWORD: postgres
           DB_HOST: localhost
           DB_PORT: 5432
-          TEST: 'true'
         run: |
           coverage run --source='.' manage.py test
-          coverage xml -o ./coverage.xml
+          coverage xml -o coverage.xml
 
       - name: Install SonarCloud Scanner
         run: |
-          # Install SonarScanner
           wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.8.0.2856-linux.zip
           unzip sonar-scanner-cli-4.8.0.2856-linux.zip
           sudo mv sonar-scanner-4.8.0.2856-linux /opt/sonar-scanner
