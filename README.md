@@ -2,6 +2,11 @@
 
 This is the backend for the ChatMatrix application, built with Django. The backend communicates with the frontend Vue.js to provide chat functionalities, including sentiment analysis and text summarization
 
+## Sonarcloud Badges
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=hanifsyuaib_project_matrix&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=hanifsyuaib_project_matrix)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=hanifsyuaib_project_matrix&metric=coverage)](https://sonarcloud.io/summary/new_code?id=hanifsyuaib_project_matrix)
+[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=hanifsyuaib_project_matrix&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=hanifsyuaib_project_matrix)
+
 ## Guide to use on Windows
 
 ### 1. Download Python
