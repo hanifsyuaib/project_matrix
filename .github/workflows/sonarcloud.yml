@@ -38,7 +38,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install coverage
-          pip install tox
 
       - name: Run tests and generate coverage
         env:
@@ -54,23 +53,26 @@ jobs:
           coverage run --source='.' manage.py test
           coverage xml -o coverage.xml
 
-      - name: Run tox
-        run: tox -e py
-
       - name: Set up JDK 17
         uses: actions/setup-java@v2
         with:
           distribution: 'temurin'
           java-version: '17'
 
+      - name: Install SonarCloud Scanner
+        run: |
+          wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
+          unzip sonar-scanner-cli-5.0.1.3006-linux.zip
+          sudo mv sonar-scanner-5.0.1.3006-linux /opt/sonar-scanner
+          sudo ln -s /opt/sonar-scanner/bin/sonar-scanner /usr/local/bin/sonar-scanner
+
       - name: Run SonarCloud analysis
-        uses: SonarSource/sonarcloud-github-action@v2
-        with:
-          args: |
-            -Dsonar.projectKey=hanifsyuaib_project_matrix
-            -Dsonar.organization=hanifsyuaib
-            -Dsonar.sources=chat_matrix
-            -Dsonar.python.coverage.reportPaths=coverage.xml
+        run: |
+          sonar-scanner \
+            -Dsonar.projectKey=hanifsyuaib_project_matrix \
+            -Dsonar.organization=hanifsyuaib \
+            -Dsonar.sources=chat_matrix \
+            -Dsonar.python.coverage.reportPaths=coverage.xml \
             -Dsonar.python.version=3.11
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
