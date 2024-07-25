@@ -68,10 +68,11 @@ jobs:
 
       - name: Run SonarCloud analysis
         env:
+          JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.12-7/x64
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: https://sonarcloud.io
-          JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.12-7/x64
         run: |
+          export JAVA_HOME=/opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.12-7/x64
           export PATH=$JAVA_HOME/bin:$PATH
           sonar-scanner \
             -Dsonar.projectKey=hanifsyuaib_project_matrix \
