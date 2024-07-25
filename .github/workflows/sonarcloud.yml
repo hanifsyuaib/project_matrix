@@ -57,22 +57,21 @@ jobs:
       - name: Run tox
         run: tox -e py
 
-      - name: Install SonarCloud Scanner
-        run: |
-          wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.8.0.2856-linux.zip
-          unzip sonar-scanner-cli-4.8.0.2856-linux.zip
-          sudo mv sonar-scanner-4.8.0.2856-linux /opt/sonar-scanner
-          sudo ln -s /opt/sonar-scanner/bin/sonar-scanner /usr/local/bin/sonar-scanner
+      - name: Set up JDK 17
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'temurin'
+          java-version: '17'
 
       - name: Run SonarCloud analysis
-        uses: SonarSource/sonarcloud-github-action@master
+        uses: SonarSource/sonarcloud-github-action@v2
+        with:
+          args: |
+            -Dsonar.projectKey=hanifsyuaib_project_matrix
+            -Dsonar.organization=hanifsyuaib
+            -Dsonar.sources=chat_matrix
+            -Dsonar.python.coverage.reportPaths=coverage.xml
+            -Dsonar.python.version=3.11
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: https://sonarcloud.io
-        run: |
-          sonar-scanner \
-            -Dsonar.projectKey=hanifsyuaib_project_matrix \
-            -Dsonar.organization=hanifsyuaib \
-            -Dsonar.sources=chat_matrix \
-            -Dsonar.python.coverage.reportPaths=coverage.xml \
-            -Dsonar.python.version=3.11
