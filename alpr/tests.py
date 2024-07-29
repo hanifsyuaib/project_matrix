@@ -1,7 +1,15 @@
 from django.test import TestCase, Client
-from django.urls import reverse
+from django.urls import reverse, resolve
 from unittest.mock import patch, Mock
 import json
+
+from django.test import SimpleTestCase
+from . import views
+
+class URLTests(SimpleTestCase):
+    def test_openai_plate_recognition_url(self):
+        url = reverse('openai_plate_recognition')
+        self.assertEqual(resolve(url).func, views.openai_plate_recognition)
 
 class ALPRTests(TestCase):
 
