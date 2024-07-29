@@ -65,12 +65,16 @@ CORS_ALLOW_HEADERS = [
     'Content-Type',  # You might need to allow other headers used in your requests
     'X-CSRFToken', 
 ]
+'''
 CORS_ALLOWED_ORIGINS = [ # Add your frontend origin
     os.environ.get("HTTPS_FRONTEND"),
 ]
 CORS_ORIGIN_WHITELIST = [ # Adjust with your actual frontend URL
-    os.environ.get("HTTPS_FRONTEND"),  
+    os.environ.get("HTTPS_FRONTEND"),
 ]
+'''
+# Allow all origins
+CORS_ALLOW_ALL_ORIGINS = True
 
 
 # [IMPORTANT]: SESSION COOKIE SETTINGS

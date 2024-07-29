@@ -23,9 +23,9 @@ def openai_plate_recognition(request):
     except json.JSONDecodeError:
         return JsonResponse({'error': 'Invalid JSON data'}, status=400)
 
-    url = data.get("url")
-    if not url:
-        return JsonResponse({'error': 'URL to image is required'}, status=400)
+    image_source = data.get("image_source") # URL or Base 64 encoded image
+    if not image_source:
+        return JsonResponse({'error': 'Image source is required'}, status=400)
 
     try:
         response = client.chat.completions.create(
@@ -44,7 +44,7 @@ def openai_plate_recognition(request):
                 {
                   "type": "image_url",
                   "image_url": {
-                    "url": url,
+                    "url": image_source,
                   },
                 },
               ],
@@ -64,7 +64,7 @@ def openai_plate_recognition(request):
         number_plate, expired_time = extract_number_plate_and_expired_time(answer)
 
         result = {
-                "url": url,
+                "image_source": image_source,
                 "answer": answer,
                 "number_plate": number_plate,
                 "expired_time": expired_time, 
