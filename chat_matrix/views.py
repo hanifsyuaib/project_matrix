@@ -14,7 +14,7 @@ from .models import ChatSentimentAnalysis, ChatSummary
 import json
 import openai
 import os
-import re
+
 from openai import OpenAI
 from dotenv import load_dotenv
 
@@ -22,61 +22,71 @@ load_dotenv()
 client = OpenAI(
     api_key=os.environ.get("OPENAI_API_KEY"),
     )
-'''
+
+@csrf_exempt
 def openai_plat_recognition(request):
-    data = json.loads(request.body)
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Invalid request method'}, status=400)
+
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON data'}, status=400)
+
     url = data.get("url")
+    if not url:
+        return JsonResponse({'error': 'URL is required'}, status=400)
 
-    response = client.chat.completions.create(
-      model="gpt-4o-mini",
-      messages=[
-        {
-          "role": "user",
-          "content": [
-            {"type": "text", 
-             "text": 
-                        #Checking Number Plate Recognition and its expired time (down below), 
-                        #can you identify from the image and return response in this strict format:
-                        #"Number Plate: <number-plate>. \nExpired Time: <expired-time>"
-
-            },
+    try:
+        response = client.chat.completions.create(
+          model="gpt-4o-mini",
+          messages=[
             {
-              "type": "image_url",
-              "image_url": {
-                "url": url,
-              },
-            },
+              "role": "user",
+              "content": [
+                {"type": "text", 
+                 "text": '''
+                            Checking Number Plate Recognition and its expired time (down below), 
+                            can you identify from the image and return response in this strict format:
+                            "Number Plate: <number-plate>. \nExpired Time: <expired-time>"
+                         '''
+                },
+                {
+                  "type": "image_url",
+                  "image_url": {
+                    "url": url,
+                  },
+                },
+              ],
+            }
           ],
+          max_tokens=200,
+        )
+
+        # Retrieve answer and token usage
+        token_usage = response.usage
+
+        message_tokens = token_usage.prompt_tokens
+        response_tokens = token_usage.completion_tokens
+        total_tokens = token_usage.total_tokens
+        answer = response.choices[0].message.content.strip()
+
+        number_plate, expired_time = extract_number_plate_and_expired_time(answer)
+
+        result = {
+                "url": url,
+                "answer": answer,
+                "number_plate": number_plate,
+                "expired_time": expired_time, 
+                "message_tokens": message_tokens, 
+                "response_tokens": response_tokens, 
+                "total_tokens": total_tokens
         }
-      ],
-      max_tokens=200,
-    )
 
-    # Retrieve answer and token usage
-    token_usage = response.usage
+        return JsonResponse(result)
 
-    message_tokens = token_usage.prompt_tokens
-    response_tokens = token_usage.completion_tokens
-    total_tokens = token_usage.total_tokens
-    answer = response.choices[0].message.content.strip()
-
-    number_plate, expired_time = extract_number_plate_and_expired_time(answer)
-
-    result = {
-            "url": url,
-            "answer": answer,
-            "number_plate": number_plate,
-            "expired_time": expired_time, 
-            "message_tokens": message_tokens, 
-            "response_tokens": response_tokens, 
-            "total_tokens": total_tokens
-    }
-
-    print()
-    print(result)
-    print()
-
-    return JsonResponse(result)
+    except Exception as e:
+        return JsonResponse({'error': 'An unexpected error occurred: ' + str(e)}, status=500)
 
 def extract_number_plate_and_expired_time(formatted_string):
     # Split the string into lines
@@ -91,7 +101,6 @@ def extract_number_plate_and_expired_time(formatted_string):
     expired_time = '\n'.join(line.strip() for line in expired_time_lines).replace('Expired Time:', '').strip()
 
     return number_plate, expired_time
-'''
 
 def openai_summary(message):
     response = client.chat.completions.create(
