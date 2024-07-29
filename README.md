@@ -1,5 +1,15 @@
 # ChatMatrix Backend
 
+## Table of Contents
+
+1. [Description](#description)
+2. [Sonarcloud Badges](#sonarcloud-badges)
+3. [Features](#features)
+4. [Installation](#installation)
+5. [License](#license)
+
+## Description
+
 This is the backend for the ChatMatrix application, built with Django. The backend communicates with the frontend Vue.js to provide chat functionalities, including sentiment analysis and text summarization
 
 ## Sonarcloud Badges
@@ -7,20 +17,30 @@ This is the backend for the ChatMatrix application, built with Django. The backe
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=hanifsyuaib_project_matrix&metric=coverage)](https://sonarcloud.io/summary/new_code?id=hanifsyuaib_project_matrix)
 [![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=hanifsyuaib_project_matrix&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=hanifsyuaib_project_matrix)
 
-## Guide to use on Windows
+## Features 
+1. Automatic License Plate Recognition (ALPR) API
 
-### 1. Download Python
+2. ChatMatrix
+	- Sentiment Analysis
+	- Summarize Text
+	- Number Plate Recognition
 
-### 2. Prepare and activate enviroment for packages to be stored
+## Installation
+
+1. Download Python
+
+2. Prepare and activate enviroment for packages to be stored
 ```
 python -m venv env
 env\Scripts\activate.bat
 ```
-### 3. Install requirement
+
+3. Install requirement
 ```
 pip install -r requirements.txt
 ``` 
-### 4. Create a file ".env" in root directory and put fill this out inside:
+
+4. Create a file ".env" in root directory and put fill this out inside:
 ```
 # OPENAI API
 OPENAI_API_KEY = '<your_openai_api_key>'
@@ -42,13 +62,14 @@ HTTPS_FRONTEND = '<your_https_frontend>'
 FRONTEND_DOMAIN = '<your_frontend_domain>'
 BACKEND_DOMAIN = '<your_backend_domain>'
 ```	
-### 5. Make migrations and migrate for setup database
+
+5. Make migrations and migrate for setup database
 ```
 python manage.py makemigrations
 python manage.py migrate
 ```
 
-### 6. Run server with port, for example:
+6. Run server with port, for example:
 ```
 python manage.py runserver
 ```
@@ -57,7 +78,7 @@ or
 python manage.py runserver 8000
 ```
 
-### 7. Additional: Create Admin user for accessing the Django admin interface in this route '/admin/'
+7. Additional: Create Admin user for accessing the Django admin interface in this route '/admin/'
 ```
 python manage.py createsuperuser
 ```
