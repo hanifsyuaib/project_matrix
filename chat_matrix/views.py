@@ -194,7 +194,7 @@ def dashboard(request):
     if not request.user.is_authenticated:
         return JsonResponse({'error_message': 'Unauthorized'}, status=401)
 
-    return JsonResponse({'success': True}, status=200)
+    return JsonResponse({'success': True, 'username': request.user.username}, status=200)
 
 def logout(request):
     if request.method == 'POST':

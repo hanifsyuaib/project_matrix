@@ -60,23 +60,23 @@ MIDDLEWARE = [
 
 
 # [IMPORTANT]: CORS SETTINGS
-CORS_ALLOW_CREDENTIALS = True # Must True for ChatMatrix
-CORS_ALLOW_HEADERS = [
-    'Content-Type',  # You might need to allow other headers used in your requests
+CORS_ALLOW_CREDENTIALS = True # Must True for ChatMatrix able to use Cookie
+CORS_ALLOW_HEADERS = [ # You might need to allow other headers used in your requests
+    'Content-Type',  
     'X-CSRFToken', 
-
 ]
 CORS_ALLOWED_ORIGINS = [ # Add your frontend origin
     os.environ.get("HTTPS_FRONTEND"),
     'http://10.45.41.100',
     'http://0.0.0.0',
+    'http://103.56.92.82:2001',
 ]
 CORS_ORIGIN_WHITELIST = [ # Adjust with your actual frontend URL
     os.environ.get("HTTPS_FRONTEND"),
     'http://10.45.41.100',
     'http://0.0.0.0',
+    'http://103.56.92.82:2001',
 ]
-
 # Allow all origins
 # CORS_ALLOW_ALL_ORIGINS = True
 
@@ -185,3 +185,64 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# Logging each app stored in log files
+
+# Define log file paths for each app
+LOG_DIR = Path(__file__).resolve().parent / 'logs'
+if not LOG_DIR.exists():
+    LOG_DIR.mkdir(parents=True)
+
+CHAT_MATRIX_LOG_FILE = LOG_DIR / 'chat_matrix.log'
+ALPR_LOG_FILE = LOG_DIR / 'alpr.log'
+
+# Logging configuration
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "root": {
+        "level": "INFO",
+        "handlers": ["chat_matrix_file", "alpr_file"],
+    },
+    "handlers": {
+        "chat_matrix_file": {
+            "level": "INFO",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": CHAT_MATRIX_LOG_FILE,
+            "maxBytes": 1024 * 1024 * 5,  # 5 MB
+            "backupCount": 5,  # Keep 5 backup files
+            "formatter": "app",
+        },
+        "alpr_file": {
+            "level": "INFO",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": ALPR_LOG_FILE,
+            "maxBytes": 1024 * 1024 * 5,  # 5 MB
+            "backupCount": 5,  # Keep 5 backup files
+            "formatter": "app",
+        },
+    },
+    "loggers": {
+        "chat_matrix": {
+            "handlers": ["chat_matrix_file"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "alpr": {
+            "handlers": ["alpr_file"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        # You can add other loggers here if needed
+    },
+    "formatters": {
+        "app": {
+            "format": (
+                u"%(asctime)s [ %(levelname)-8s] "
+                "(%(module)s.%(funcName)s) %(message)s"
+            ),
+            "datefmt": "%Y-%m-%d %H:%M:%S",
+        },
+    },
+}
