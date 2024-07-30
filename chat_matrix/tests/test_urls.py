@@ -19,6 +19,10 @@ class URLTests(SimpleTestCase):
         url = reverse('logout')
         self.assertEqual(resolve(url).func, views.logout)
 
+    def test_dashboard_url(self):
+        url = reverse('dashboard')
+        self.assertEqual(resolve(url).func, views.dashboard)
+
     def test_sentiment_analysis_url(self):
         url = reverse('sentiment_analysis')
         self.assertEqual(resolve(url).func, views.sentiment_analysis)

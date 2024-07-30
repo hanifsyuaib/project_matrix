@@ -164,6 +164,26 @@ class SentimentAnalysisViewTestCase(TestCase):
         self.assertEqual(response.status_code, 401)
         self.assertJSONEqual(response.content, {'error_message': 'Unauthorized'})
 
+class DashboardViewTestCase(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.dashboard_url = reverse('dashboard')
+        self.user = User.objects.create_user(username='testuser', password='password123')
+        self.client.login(username='testuser', password='password123')
+
+    def test_dashboard_unauthorized(self):
+        self.client.logout()
+        response = self.client.post(self.dashboard_url, json.dumps({
+            'message': 'This should fail due to unauthorized user.'
+        }), content_type='application/json')
+        self.assertEqual(response.status_code, 401)
+        self.assertJSONEqual(response.content, {'error_message': 'Unauthorized'})
+
+    def test_dashboard_success(self):
+        response = self.client.get(self.dashboard_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertJSONEqual(response.content, {'success': True})
+
 class GetCSRFTokenViewTestCase(TestCase):
     def setUp(self):
         self.client = Client()
