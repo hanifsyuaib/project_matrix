@@ -60,23 +60,26 @@ MIDDLEWARE = [
 
 
 # [IMPORTANT]: CORS SETTINGS
-CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_CREDENTIALS = False
 CORS_ALLOW_HEADERS = [
     'Content-Type',  # You might need to allow other headers used in your requests
     'X-CSRFToken', 
+
 ]
 
 CORS_ALLOWED_ORIGINS = [ # Add your frontend origin
     os.environ.get("HTTPS_FRONTEND"),
     'http://10.45.41.100',
+    'http://0.0.0.0',
 ]
 CORS_ORIGIN_WHITELIST = [ # Adjust with your actual frontend URL
     os.environ.get("HTTPS_FRONTEND"),
     'http://10.45.41.100',
+    'http://0.0.0.0',
 ]
 
 # Allow all origins
-#CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = True
 
 
 # [IMPORTANT]: SESSION COOKIE SETTINGS
