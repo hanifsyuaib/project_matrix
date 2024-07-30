@@ -173,9 +173,7 @@ class DashboardViewTestCase(TestCase):
 
     def test_dashboard_unauthorized(self):
         self.client.logout()
-        response = self.client.post(self.dashboard_url, json.dumps({
-            'message': 'This should fail due to unauthorized user.'
-        }), content_type='application/json')
+        response = self.client.get(self.dashboard_url)
         self.assertEqual(response.status_code, 401)
         self.assertJSONEqual(response.content, {'error_message': 'Unauthorized'})
 
@@ -183,6 +181,11 @@ class DashboardViewTestCase(TestCase):
         response = self.client.get(self.dashboard_url)
         self.assertEqual(response.status_code, 200)
         self.assertJSONEqual(response.content, {'success': True,  'username': 'testuser'})
+
+    def test_dashboard_invalid_method(self):
+        response = self.client.post(self.dashboard_url)
+        self.assertEqual(response.status_code, 405)
+        self.assertJSONEqual(response.content, {'success': False, 'error_message': 'Invalid request method'})
 
 class GetCSRFTokenViewTestCase(TestCase):
     def setUp(self):

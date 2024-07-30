@@ -191,10 +191,13 @@ def extract_sentiment_and_reason(formatted_string):
     return sentiment, reason
 
 def dashboard(request):
-    if not request.user.is_authenticated:
-        return JsonResponse({'error_message': 'Unauthorized'}, status=401)
+    if request.method == 'GET':
+        if not request.user.is_authenticated:
+            return JsonResponse({'error_message': 'Unauthorized'}, status=401)
 
-    return JsonResponse({'success': True, 'username': request.user.username}, status=200)
+        return JsonResponse({'success': True, 'username': request.user.username}, status=200)
+
+    return JsonResponse({'success': False, 'error_message': 'Invalid request method'}, status=405)
 
 def logout(request):
     if request.method == 'POST':
