@@ -182,7 +182,7 @@ class DashboardViewTestCase(TestCase):
     def test_dashboard_success(self):
         response = self.client.get(self.dashboard_url)
         self.assertEqual(response.status_code, 200)
-        self.assertJSONEqual(response.content, {'success': True})
+        self.assertJSONEqual(response.content, {'success': True,  'username': 'testuser'})
 
 class GetCSRFTokenViewTestCase(TestCase):
     def setUp(self):
