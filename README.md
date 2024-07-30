@@ -41,7 +41,7 @@ env\Scripts\activate.bat
 pip install -r requirements.txt
 ``` 
 
-4. Create a file ".env" in root directory and put fill this out inside:
+4. Create a file ".env" in root directory. Put this inside the file and change its value:
 ```
 # OPENAI API
 OPENAI_API_KEY = '<your_openai_api_key>'
