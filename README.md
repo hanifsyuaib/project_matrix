@@ -70,13 +70,13 @@ python manage.py makemigrations
 python manage.py migrate
 ```
 
-6. Run server with port, for example:
+6. Run server with host and port, for example:
 ```
 python manage.py runserver
 ```
 or
 ```
-python manage.py runserver 8000
+python manage.py runserver 0.0.0.0:8000
 ```
 
 7. Additional: Create Admin user for accessing the Django admin interface in this route '/admin/'
