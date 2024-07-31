@@ -1,6 +1,6 @@
 from django.test import TestCase
 from django.contrib.auth.models import User
-from chat_matrix.models import ChatSentimentAnalysis, ChatSummary
+from chat_matrix.models import ChatSentimentAnalysis, ChatSummary, ChatPlateRecognition
 from datetime import datetime
 
 class ChatSentimentAnalysisModelTest(TestCase):
@@ -64,3 +64,33 @@ class ChatSummaryModelTest(TestCase):
     def test_chat_summary_string_representation(self):
         expected_str = f'{self.user.username}: Test message'
         self.assertEqual(str(self.chat_summary), expected_str)
+
+
+class ChatPlateRecognitionModelTest(TestCase):
+    def setUp(self):
+        self.user = User.objects.create(username='testuser', password='password')
+        self.chat = ChatPlateRecognition.objects.create(
+            user=self.user,
+            message='Test message',
+            response='Test response',
+            number_plate='B 1234 HAI',
+            expired_time='08.24',
+            message_tokens=5,
+            response_tokens=4,
+            total_tokens=9
+        )
+
+    def test_chat_plate_recognition_creation(self):
+        self.assertEqual(self.chat.user, self.user)
+        self.assertEqual(self.chat.message, 'Test message')
+        self.assertEqual(self.chat.response, 'Test response')
+        self.assertEqual(self.chat.number_plate, 'B 1234 HAI')
+        self.assertEqual(self.chat.expired_time, '08.24')
+        self.assertEqual(self.chat.message_tokens, 5)
+        self.assertEqual(self.chat.response_tokens, 4)
+        self.assertEqual(self.chat.total_tokens, 9)
+        self.assertTrue(isinstance(self.chat.created_at, datetime))
+
+    def test_chat_plate_recognition_string_representation(self):
+        expected_str = f'{self.user.username}: Test message'
+        self.assertEqual(str(self.chat), expected_str)

@@ -9,7 +9,7 @@ from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from django.contrib.auth import logout
 from django.middleware.csrf import get_token
 
-from .models import ChatSentimentAnalysis, ChatSummary
+from .models import ChatSentimentAnalysis, ChatSummary, ChatPlateRecognition
 
 import json
 import openai
@@ -22,6 +22,90 @@ load_dotenv()
 client = OpenAI(
     api_key=os.environ.get("OPENAI_API_KEY"),
     )
+
+def openai_plate_recognition(message):
+    response = client.chat.completions.create(
+          model="gpt-4o-mini",
+          messages=[
+            {
+              "role": "user",
+              "content": [
+                {"type": "text", 
+                 "text": '''
+                            Checking Number Plate Recognition and its expired time (down below), 
+                            can you identify from the image and return response in this strict format:
+                            "Number Plate: <number-plate>. \nExpired Time: <expired-time>"
+                         '''
+                },
+                {
+                  "type": "image_url",
+                  "image_url": {
+                    "url": message, # Image URL or Base 64 encoded image
+                  },
+                },
+              ],
+            }
+          ],
+          max_tokens=200,
+        )
+
+    # Retrieve answer and token usage
+    token_usage = response.usage
+
+    message_tokens = token_usage.prompt_tokens
+    response_tokens = token_usage.completion_tokens
+    total_tokens = token_usage.total_tokens
+    answer = response.choices[0].message.content.strip()
+
+    return {
+            "answer": answer, 
+            "message_tokens": message_tokens, 
+            "response_tokens": response_tokens, 
+            "total_tokens": total_tokens
+    }
+
+def plate_recognition(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({'error_message': 'Unauthorized'}, status=401)
+
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        message = data.get('message')
+        result = openai_plate_recognition(message)
+        number_plate, expired_time = extract_number_plate_and_expired_time(result["answer"])
+
+        chat = ChatPlateRecognition(
+            user=request.user, 
+            message=message, 
+            response=result["answer"], 
+            number_plate=number_plate,
+            expired_time=expired_time,
+            created_at=timezone.now(),
+            message_tokens=result["message_tokens"],
+            response_tokens=result["response_tokens"],
+            total_tokens=result["total_tokens"]
+        )
+        chat.save()
+        return JsonResponse({'message': message, 'response': result["answer"]})
+    
+    # For GET requests, return existing chats
+    chats = ChatPlateRecognition.objects.filter(user=request.user)
+    chat_data = [{'message': chat.message, 'response': chat.response} for chat in chats]
+    return JsonResponse({'chats': chat_data, 'username': request.user.username})
+
+def extract_number_plate_and_expired_time(formatted_string):
+    # Split the string into lines
+    lines = formatted_string.split('\n')
+
+    # Extract number plate from the first line
+    number_plate_line = lines[0].strip()
+    number_plate = number_plate_line.replace('Number Plate:', '').replace('.', '').strip()
+    
+    # Collect all lines after the first one for the reason
+    expired_time_lines = lines[1:]
+    expired_time = '\n'.join(line.strip() for line in expired_time_lines).replace('Expired Time:', '').strip()
+
+    return number_plate, expired_time
 
 def openai_summary(message):
     response = client.chat.completions.create(

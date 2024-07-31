@@ -1,7 +1,7 @@
 from django.test import TestCase, Client
 from django.contrib.auth.models import User
 from django.urls import reverse
-from chat_matrix.models import ChatSentimentAnalysis, ChatSummary
+from chat_matrix.models import ChatSentimentAnalysis, ChatSummary, ChatPlateRecognition
 import json
 from unittest.mock import patch
 
@@ -80,6 +80,7 @@ class LogoutViewTestCase(TestCase):
         response = self.client.get(self.logout_url)
         self.assertEqual(response.status_code, 405)
         self.assertJSONEqual(response.content, {'success': False, 'error_message': 'Invalid request method'})
+
 
 class SummaryViewTestCase(TestCase):
     def setUp(self):
@@ -164,6 +165,7 @@ class SentimentAnalysisViewTestCase(TestCase):
         self.assertEqual(response.status_code, 401)
         self.assertJSONEqual(response.content, {'error_message': 'Unauthorized'})
 
+
 class DashboardViewTestCase(TestCase):
     def setUp(self):
         self.client = Client()
@@ -187,6 +189,7 @@ class DashboardViewTestCase(TestCase):
         self.assertEqual(response.status_code, 405)
         self.assertJSONEqual(response.content, {'success': False, 'error_message': 'Invalid request method'})
 
+
 class GetCSRFTokenViewTestCase(TestCase):
     def setUp(self):
         self.client = Client()
@@ -196,3 +199,45 @@ class GetCSRFTokenViewTestCase(TestCase):
         response = self.client.get(self.get_csrf_token_url)
         self.assertEqual(response.status_code, 200)
         self.assertIn('csrftoken', response.json())
+
+
+class PlateRecognitionViewTestCase(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.plate_recognition_url = reverse('plate_recognition')
+        self.user = User.objects.create_user(username='testuser', password='password123')
+        self.client.login(username='testuser', password='password123')
+
+    @patch('chat_matrix.views.openai_plate_recognition')
+    def test_plate_recognition_post_success(self, mock_openai_plate_recognition):
+        mock_openai_plate_recognition.return_value = {
+            'answer': 'Number Plate: B 1234 HAI. \nExpired Time: 08.24',
+            'message_tokens': 10,
+            'response_tokens': 20,
+            'total_tokens': 30
+        }
+        response = self.client.post(self.plate_recognition_url, json.dumps({
+            'message': 'This is a test message for plate recognition.'
+        }), content_type='application/json')
+
+        expected_response = {
+            'message': 'This is a test message for plate recognition.',
+            'response': 'Number Plate: B 1234 HAI. \nExpired Time: 08.24'
+        }
+        self.assertEqual(response.status_code, 200)
+        self.assertJSONEqual(response.content, expected_response)
+
+    def test_plate_recognition_get(self):
+        ChatPlateRecognition.objects.create(user=self.user, message='Test message', response='Plate recognition response here')
+        response = self.client.get(self.plate_recognition_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('chats', response.json())
+        self.assertIn('username', response.json())
+
+    def test_plate_recognition_unauthorized(self):
+        self.client.logout()
+        response = self.client.post(self.plate_recognition_url, json.dumps({
+            'message': 'This should fail due to unauthorized user.'
+        }), content_type='application/json')
+        self.assertEqual(response.status_code, 401)
+        self.assertJSONEqual(response.content, {'error_message': 'Unauthorized'})

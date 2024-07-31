@@ -30,3 +30,7 @@ class URLTests(SimpleTestCase):
     def test_summary_url(self):
         url = reverse('summary')
         self.assertEqual(resolve(url).func, views.summary)
+
+    def test_plate_recognition_url(self):
+        url = reverse('plate_recognition')
+        self.assertEqual(resolve(url).func, views.plate_recognition)
