@@ -316,7 +316,7 @@ def login(request):
 def validate_old_password(username, old_password):
     user = authenticate(username=username, password=old_password)
     if user is None:
-        raise ValidationError("Wrong password.")
+        raise ValidationError("Wrong current password.")
 
 def validate_change_password_data(username, old_password, new_password, confirm_new_password):
     validate_old_password(username, old_password)
@@ -325,9 +325,9 @@ def validate_change_password_data(username, old_password, new_password, confirm_
 def change_password(request):
     if request.method == 'POST':
         data = json.loads(request.body)
-        old_password = data.get('old_password')
-        new_password = data.get('new_password')
-        confirm_new_password = data.get('confirm_new_password')
+        old_password = data.get('oldPassword')
+        new_password = data.get('newPassword')
+        confirm_new_password = data.get('confirmNewPassword')
 
         username = request.user.username
         
@@ -350,18 +350,18 @@ def change_password(request):
 
     return JsonResponse({'success': False, 'error_message': 'Invalid request method'}, status=405)
 
-def validate_password(password1, password2):
-    if len(password1) < 8:
+def validate_password(password, confirm_password):
+    if len(password) < 8:
         raise ValidationError("Password must be at least 8 characters long.")
-    if not re.search(r'[A-Z]', password1):
+    if not re.search(r'[A-Z]', password):
         raise ValidationError("Password must contain at least one uppercase letter.")
-    if not re.search(r'[a-z]', password1):
+    if not re.search(r'[a-z]', password):
         raise ValidationError("Password must contain at least one lowercase letter.")
-    if not re.search(r'\d', password1):
+    if not re.search(r'\d', password):
         raise ValidationError("Password must contain at least one digit.")
-    if not re.search(r'[\W_]', password1):
+    if not re.search(r'[\W_]', password):
         raise ValidationError("Password must contain at least one special character.")
-    if password1 != password2:
+    if password != confirm_password:
         raise ValidationError("Passwords do not match.")
 
 def validate_username_exists(username):
@@ -372,11 +372,11 @@ def validate_email_exists(email):
     if User.objects.filter(email=email).exists():
         raise ValidationError("Email already exists.")
 
-def validate_registration_data(username, email, password1, password2):
+def validate_registration_data(username, email, password, confirm_password):
     validate_username_exists(username)
     validate_email(email)
     validate_email_exists(email)
-    validate_password(password1, password2)
+    validate_password(password, confirm_password)
 
 def register(request):
     if request.method == 'POST':
@@ -387,12 +387,12 @@ def register(request):
         data = json.loads(request.body)
         username = data.get('username')
         email = data.get('email')
-        password1 = data.get('password1')
-        password2 = data.get('password2')
+        password = data.get('password')
+        confirm_password = data.get('confirmPassword')
 
         try:
-            validate_registration_data(username, email, password1, password2)
-            user = User.objects.create_user(username, email, password1)
+            validate_registration_data(username, email, password, confirm_password)
+            user = User.objects.create_user(username, email, password)
             user.save()
             auth.login(request, user)   
             return JsonResponse({'success': True}, status=201)
