@@ -10,6 +10,7 @@ from django.contrib.auth import logout
 from django.middleware.csrf import get_token
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
+from django.contrib.auth import authenticate, update_session_auth_hash
 
 from .models import ChatSentimentAnalysis, ChatSummary, ChatPlateRecognition
 
@@ -312,44 +313,77 @@ def login(request):
 
     return JsonResponse({'success': False, 'error_message': 'Invalid request method'}, status=405)
 
-def validate_password(password):
-    if len(password) < 8:
-        raise ValidationError("Password must be at least 8 characters long.")
-    if not re.search(r'[A-Z]', password):
-        raise ValidationError("Password must contain at least one uppercase letter.")
-    if not re.search(r'[a-z]', password):
-        raise ValidationError("Password must contain at least one lowercase letter.")
-    if not re.search(r'\d', password):
-        raise ValidationError("Password must contain at least one digit.")
-    if not re.search(r'[\W_]', password):
-        raise ValidationError("Password must contain at least one special character.")
+def validate_old_password(username, old_password):
+    user = authenticate(username=username, password=old_password)
+    if user is None:
+        raise ValidationError("Wrong password.")
 
-def validate_registration_data(username, email, password1, password2):
+def validate_change_password_data(username, old_password, new_password, confirm_new_password):
+    validate_old_password(username, old_password)
+    validate_password(new_password, confirm_new_password)
+
+def change_password(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        old_password = data.get('old_password')
+        new_password = data.get('new_password')
+        confirm_new_password = data.get('confirm_new_password')
+
+        username = request.user.username
+        
+        try:
+            validate_change_password_data(username, old_password, new_password, confirm_new_password)
+            user = User.objects.get(username=username)
+            user.set_password(new_password)
+            user.save() 
+
+            # Updating session auth hash to keep the user logged in after password changed
+            update_session_auth_hash(request, user)
+
+            return JsonResponse({'success': True, 'error_message': 'Password has been successfully changed'}, status=201)
+
+        except ValidationError as e:
+            return JsonResponse({'success': False, 'error_message': e.message}, status=200)
+
+        except Exception as e:
+            return JsonResponse({'success': False, 'error_message': e.message}, status=400)
+
+    return JsonResponse({'success': False, 'error_message': 'Invalid request method'}, status=405)
+
+def validate_password(password1, password2):
+    if len(password1) < 8:
+        raise ValidationError("Password must be at least 8 characters long.")
+    if not re.search(r'[A-Z]', password1):
+        raise ValidationError("Password must contain at least one uppercase letter.")
+    if not re.search(r'[a-z]', password1):
+        raise ValidationError("Password must contain at least one lowercase letter.")
+    if not re.search(r'\d', password1):
+        raise ValidationError("Password must contain at least one digit.")
+    if not re.search(r'[\W_]', password1):
+        raise ValidationError("Password must contain at least one special character.")
     if password1 != password2:
         raise ValidationError("Passwords do not match.")
 
-    try:
-        validate_email(email)
-    except ValidationError as e:
-        raise ValidationError(e.message)
-
-    try:
-        validate_password(password1)
-    except ValidationError as e:
-        raise ValidationError(e.message)
-
+def validate_username_exists(username):
     if User.objects.filter(username=username).exists():
         raise ValidationError("Username already exists.")
 
+def validate_email_exists(email):
     if User.objects.filter(email=email).exists():
         raise ValidationError("Email already exists.")
+
+def validate_registration_data(username, email, password1, password2):
+    validate_username_exists(username)
+    validate_email(email)
+    validate_email_exists(email)
+    validate_password(password1, password2)
 
 def register(request):
     if request.method == 'POST':
 
         if request.user.is_authenticated:
             auth.logout(request)
-        
+
         data = json.loads(request.body)
         username = data.get('username')
         email = data.get('email')
