@@ -8,12 +8,15 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from django.contrib.auth import logout
 from django.middleware.csrf import get_token
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
 
 from .models import ChatSentimentAnalysis, ChatSummary, ChatPlateRecognition
 
 import json
 import openai
 import os
+import re
 
 from openai import OpenAI
 from dotenv import load_dotenv
@@ -305,6 +308,38 @@ def login(request):
 
     return JsonResponse({'success': False, 'error_message': 'Invalid request method'}, status=405)
 
+def validate_password(password):
+    if len(password) < 8:
+        raise ValidationError("Password must be at least 8 characters long.")
+    if not re.search(r'[A-Z]', password):
+        raise ValidationError("Password must contain at least one uppercase letter.")
+    if not re.search(r'[a-z]', password):
+        raise ValidationError("Password must contain at least one lowercase letter.")
+    if not re.search(r'\d', password):
+        raise ValidationError("Password must contain at least one digit.")
+    if not re.search(r'[\W_]', password):
+        raise ValidationError("Password must contain at least one special character.")
+
+def validate_registration_data(username, email, password1, password2):
+    if password1 != password2:
+        raise ValidationError("Passwords do not match.")
+
+    try:
+        validate_email(email)
+    except ValidationError as e:
+        raise ValidationError(e.message)
+
+    try:
+        validate_password(password1)
+    except ValidationError as e:
+        raise ValidationError(e.message)
+
+    if User.objects.filter(username=username).exists():
+        raise ValidationError("Username already exists.")
+
+    if User.objects.filter(email=email).exists():
+        raise ValidationError("Email already exists.")
+
 def register(request):
     if request.method == 'POST':
         data = json.loads(request.body)
@@ -313,19 +348,21 @@ def register(request):
         password1 = data.get('password1')
         password2 = data.get('password2')
 
-        if password1 == password2:
-            try:
-                user = User.objects.create_user(username, email, password1)
-                user.save()
-                auth.login(request, user)
-                return JsonResponse({'success': True}, status=201)
-            except Exception as e:
-                return JsonResponse({'success': False, 'error_message': str(e)}, status=400)
-        else:
-            return JsonResponse({'success': False, 'error_message': 'Passwords do not match'}, status=400)
-    
-    return JsonResponse({'success': False, 'error_message': 'Invalid request method'}, status=405)
+        try:
+            validate_registration_data(username, email, password1, password2)
+            user = User.objects.create_user(username, email, password1)
+            user.save()
+            auth.login(request, user)   
+            return JsonResponse({'success': True}, status=201)
 
+        except ValidationError as e:
+            return JsonResponse({'success': False, 'error_message': e.message}, status=200)
+
+        except Exception as e:
+            return JsonResponse({'success': False, 'error_message': e.message}, status=400)
+
+    return JsonResponse({'success': False, 'error_message': 'Invalid request method'}, status=405)
+ 
 @ensure_csrf_cookie
 def get_csrf_token(request):
     csrf_token = get_token(request)
