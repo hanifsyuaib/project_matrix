@@ -295,6 +295,10 @@ def logout(request):
 
 def login(request):
     if request.method == 'POST':
+
+        if request.user.is_authenticated:
+            auth.logout(request)
+
         data = json.loads(request.body)
         username = data.get('username')
         password = data.get('password')
@@ -304,7 +308,7 @@ def login(request):
             auth.login(request, user)
             return JsonResponse({'success': True}, status=200)
         else:
-            return JsonResponse({'success': False, 'error_message': 'Invalid username or password'}, status=400)
+            return JsonResponse({'success': False, 'error_message': 'Invalid username or password.'}, status=200)
 
     return JsonResponse({'success': False, 'error_message': 'Invalid request method'}, status=405)
 
@@ -342,6 +346,10 @@ def validate_registration_data(username, email, password1, password2):
 
 def register(request):
     if request.method == 'POST':
+
+        if request.user.is_authenticated:
+            auth.logout(request)
+        
         data = json.loads(request.body)
         username = data.get('username')
         email = data.get('email')
