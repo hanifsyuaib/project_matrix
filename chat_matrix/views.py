@@ -6,6 +6,7 @@ from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from django.middleware.csrf import get_token
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
+from django.core.mail import send_mail
 
 from .models import ChatSentimentAnalysis, ChatSummary, ChatPlateRecognition
 
@@ -321,6 +322,68 @@ def authenticate_user_login(request):
             return None
         
     return auth.authenticate(request, username=username, password=password)
+
+def validate_email_not_exists(email):
+    if not User.objects.filter(email=email).exists():
+        raise ValidationError("No account using this email exists.")
+
+def validate_forgot_password_data(email):
+    validate_email(email)
+    validate_email_not_exists(email)
+
+def send_email_forgot_password(email):
+    user = User.objects.get(email=email)
+    user_username = user.username
+    user_password = user.password
+
+    title = 'ChatMatrix - Forgot Password'
+    message = f'''
+                Dear {user_username},
+
+                Thank you for using ChatMatrix application.
+
+                We understand that you forgot your password and will help you remember it :)
+
+                Your Password: {user_password}
+
+                Please consider changing your current password and hope you won't forget it again :D
+
+                PS. you don't have to reply as this is generated automatically
+
+                Best regards,
+                ChatMatrix Developer
+
+              '''
+    sender_email = os.environ.get('EMAIL_HOST_USER')
+    receiver_email = [email]
+
+    send_mail(
+        title,
+        message, 
+        sender_email, 
+        receiver_email,
+        fail_silently=False
+    )
+
+def forgot_password(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        email = data.get('email')
+        
+        try:
+            validate_forgot_password_data(email)
+            
+            send_email_forgot_password(email)
+
+            return JsonResponse({'success': True, 'success_message': 'We have successfully emailed you. Please check your inbox'}, status=201)
+
+        except ValidationError as e:
+            return JsonResponse({'success': False, 'error_message': e.message}, status=200)
+
+        except Exception as e:
+            return JsonResponse({'success': False, 'error_message': e.message}, status=400)
+
+    return JsonResponse({'success': False, 'error_message': 'Invalid request method'}, status=405)
 
 def validate_old_password(username, old_password):
     user = auth.authenticate(username=username, password=old_password)
