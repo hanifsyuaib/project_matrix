@@ -1,16 +1,11 @@
-from django.http import HttpResponse
-from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.contrib import auth
 from django.contrib.auth.models import User
 from django.utils import timezone
-from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
-from django.contrib.auth import logout
 from django.middleware.csrf import get_token
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
-from django.contrib.auth import authenticate, update_session_auth_hash
 
 from .models import ChatSentimentAnalysis, ChatSummary, ChatPlateRecognition
 
@@ -283,7 +278,7 @@ def dashboard(request):
         if not request.user.is_authenticated:
             return JsonResponse({'error_message': 'Unauthorized'}, status=401)
 
-        return JsonResponse({'success': True, 'username': request.user.username}, status=200)
+        return JsonResponse({'success': True, 'username': request.user.username, 'email': request.user.email}, status=200)
 
     return JsonResponse({'success': False, 'error_message': 'Invalid request method'}, status=405)
 
@@ -300,21 +295,35 @@ def login(request):
         if request.user.is_authenticated:
             auth.logout(request)
 
-        data = json.loads(request.body)
-        username = data.get('username')
-        password = data.get('password')
-        user = auth.authenticate(request, username=username, password=password)
-        
+        user = authenticate_user_login(request)
+
         if user is not None:
             auth.login(request, user)
             return JsonResponse({'success': True}, status=200)
         else:
-            return JsonResponse({'success': False, 'error_message': 'Invalid username or password.'}, status=200)
+            return JsonResponse({'success': False, 'error_message': 'Login failed. Please check your details and try again.'}, status=200)
 
     return JsonResponse({'success': False, 'error_message': 'Invalid request method'}, status=405)
 
+def authenticate_user_login(request):
+    data = json.loads(request.body)
+    isUsername = data.get('isUsername')
+    password = data.get('password')
+
+    if (isUsername):
+        username = data.get('username')
+    else:
+        email = data.get('email')
+        try:
+            user = User.objects.get(email=email)
+            username = user.username
+        except User.DoesNotExist:
+            return None
+        
+    return auth.authenticate(request, username=username, password=password)
+
 def validate_old_password(username, old_password):
-    user = authenticate(username=username, password=old_password)
+    user = auth.authenticate(username=username, password=old_password)
     if user is None:
         raise ValidationError("Wrong current password.")
 
@@ -338,9 +347,9 @@ def change_password(request):
             user.save() 
 
             # Updating session auth hash to keep the user logged in after password changed
-            update_session_auth_hash(request, user)
+            auth.update_session_auth_hash(request, user)
 
-            return JsonResponse({'success': True, 'error_message': 'Password has been successfully changed'}, status=201)
+            return JsonResponse({'success': True, 'success_message': 'Password has been successfully changed.'}, status=201)
 
         except ValidationError as e:
             return JsonResponse({'success': False, 'error_message': e.message}, status=200)
