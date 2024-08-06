@@ -20,4 +20,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('chat_matrix.urls')),
     path('api/alpr/', include('alpr.urls')),
+    path('api/tvd/', include('tvd.urls')),
 ]

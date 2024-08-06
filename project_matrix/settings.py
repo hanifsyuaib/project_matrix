@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'chat_matrix',
     'corsheaders',
     'alpr',
+    'tvd',
 ]
 
 MIDDLEWARE = [
@@ -203,8 +204,10 @@ LOG_DIR = Path(__file__).resolve().parent / 'logs'
 if not LOG_DIR.exists():
     LOG_DIR.mkdir(parents=True)
 
+# Application location to be stored in
 CHAT_MATRIX_LOG_FILE = LOG_DIR / 'chat_matrix.log'
 ALPR_LOG_FILE = LOG_DIR / 'alpr.log'
+TVD_LOG_FILE = LOG_DIR / 'tvd.log'
 
 # Logging configuration
 LOGGING = {
@@ -212,7 +215,7 @@ LOGGING = {
     "disable_existing_loggers": False,
     "root": {
         "level": "INFO",
-        "handlers": ["chat_matrix_file", "alpr_file"],
+        "handlers": ["chat_matrix_file", "alpr_file", "tvd_file"],
     },
     "handlers": {
         "chat_matrix_file": {
@@ -231,6 +234,15 @@ LOGGING = {
             "backupCount": 5,  # Keep 5 backup files
             "formatter": "app",
         },
+        "tvd_file": {
+            "level": "INFO",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": TVD_LOG_FILE,
+            "maxBytes": 1024 * 1024 * 5,  # 5 MB
+            "backupCount": 5,  # Keep 5 backup files
+            "formatter": "app",
+        },
+        # You can add other loggers here if needed
     },
     "loggers": {
         "chat_matrix": {
@@ -240,6 +252,11 @@ LOGGING = {
         },
         "alpr": {
             "handlers": ["alpr_file"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "tvd": {
+            "handlers": ["tvd_file"],
             "level": "INFO",
             "propagate": False,
         },
