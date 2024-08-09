@@ -51,6 +51,12 @@ def openai_tvd_helmet(request):
         first_variable_name = 'Total Occupants On Motorcycle:'
         second_variable_name = 'All Occupants Are Wearing Helmets:'
 
+        prompt_to_openai = f'''
+                                Based on the image, please focus on the area inside the green square.
+                                Identify the number occupants on the motorcycle and check if all occupants are wearing helmets.  
+                                Return your response in the following strict string format: 
+                                {first_variable_name} <integer>. \n{second_variable_name} <boolean>.
+                            '''
         response = client.chat.completions.create(
           model="gpt-4o-mini",
           messages=[
@@ -59,12 +65,7 @@ def openai_tvd_helmet(request):
               "content": [
                 {  
                   "type": "text", 
-                  "text": f'''
-                           Based on the image, please focus on the area inside the green square.
-                           Identify the number occupants on the motorcycle and check if all occupants are wearing helmets.  
-                           Return your response in the following strict string format: 
-                           {first_variable_name} <integer>. \n{second_variable_name} <boolean>.
-                           '''
+                  "text": prompt_to_openai
                 },
                 {
                   "type": "image_url",
@@ -113,6 +114,12 @@ def openai_tvd_seatbelt(request):
         first_variable_name = 'Total Occupants Inside The Vehicle:'
         second_variable_name = 'All Occupants Are Wearing Seatbelt:'
 
+        prompt_to_openai = f'''
+                                Based on the image, please focus on the area inside the yellow square.
+                                Identify the number occupants inside the vehicle and check if all occupants are wearing seatbelt.  
+                                Return your response in the following strict string format: 
+                                {first_variable_name} <integer>. \n{second_variable_name} <boolean>.
+                            '''
         response = client.chat.completions.create(
           model="gpt-4o-mini",
           messages=[
@@ -121,12 +128,7 @@ def openai_tvd_seatbelt(request):
               "content": [
                 {  
                   "type": "text", 
-                  "text": f'''
-                           Based on the image, please focus on the area inside the yellow square.
-                           Identify the number occupants inside the vehicle and check if all occupants are wearing seatbelt.  
-                           Return your response in the following strict string format: 
-                           {first_variable_name} <integer>. \n{second_variable_name} <boolean>.
-                           '''
+                  "text": prompt_to_openai
                 },
                 {
                   "type": "image_url",
@@ -173,6 +175,11 @@ def openai_tvd_mobile_phone(request):
     try:
         image_source = validate_image_source_request(request)
 
+        prompt_to_openai = f'''
+                                Based on the image, please focus on the area inside the yellow square.
+                                Check if the driver inside the vehicle is using mobile phone.  
+                                Return your response in the following strict string format: boolean
+                           '''
         response = client.chat.completions.create(
           model="gpt-4o-mini",
           messages=[
@@ -181,11 +188,7 @@ def openai_tvd_mobile_phone(request):
               "content": [
                 {  
                   "type": "text", 
-                  "text": f'''
-                           Based on the image, please focus on the area inside the yellow square.
-                           Check if the driver inside the vehicle is using mobile phone.  
-                           Return your response in the following strict string format: boolean
-                           '''
+                  "text": prompt_to_openai
                 },
                 {
                   "type": "image_url",
@@ -211,6 +214,69 @@ def openai_tvd_mobile_phone(request):
                 "image_source": image_source,
                 "answer": answer,
                 "driver_using_mobile_phone": answer,
+                "message_tokens": message_tokens, 
+                "response_tokens": response_tokens, 
+                "total_tokens": total_tokens
+        }
+
+        return JsonResponse(result)
+
+    except ValidationError as e:
+        return JsonResponse({'error': 'Validation error occurred: ' + e.message}, status=400)
+
+    except Exception as e:
+        return JsonResponse({'error': 'An unexpected error occurred: ' + str(e)}, status=500)
+
+
+@csrf_exempt
+def openai_tvd_car(request):
+    try:
+        image_source = validate_image_source_request(request)
+
+        prompt_to_openai = f'''
+                                Based on the image, please focus on the area inside the yellow square.
+                                The Question down below:
+                                1. Count human inside the car.
+                                2. Check if all human inside the car are wearing seatbelt.
+                                3. Check if the driver inside the car is using mobile phone.  
+                                Return your response in the following strict string format down below: 
+                                Total Human = integer
+                                Are All Human Wearing Seatbelt = boolean.
+                                Is Driver Using Mobile Phone = boolean.
+                           '''
+        response = client.chat.completions.create(
+          model="gpt-4o-mini",
+          messages=[
+            {
+              "role": "user",
+              "content": [
+                {  
+                  "type": "text", 
+                  "text": prompt_to_openai
+                },
+                {
+                  "type": "image_url",
+                  "image_url": {
+                    "url": image_source,
+                  },
+                },
+              ],
+            }
+          ],
+          max_tokens=200,
+        )
+
+        # Retrieve answer and token usage
+        token_usage = response.usage
+
+        message_tokens = token_usage.prompt_tokens
+        response_tokens = token_usage.completion_tokens
+        total_tokens = token_usage.total_tokens
+        answer = response.choices[0].message.content.strip()
+
+        result = {
+                "image_source": image_source,
+                "answer": answer,
                 "message_tokens": message_tokens, 
                 "response_tokens": response_tokens, 
                 "total_tokens": total_tokens
